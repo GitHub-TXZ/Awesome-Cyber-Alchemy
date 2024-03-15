@@ -7,6 +7,9 @@ In your server:
 `scp -P 10522 -r tanxz@122.207.108.8:/home/tanxz/.conda/envs/nnunet /home/txz/anaconda3/envs/`
 `cd /home/txz/anaconda3/envs/nnunet/bin`
 `vim pip`, 将第一行的地址改为自己服务器的地址
+`find /home/txz/anaconda3/envs/nnunet/bin/ -type f -exec sed -i '1s|#!/home/tanxz/.conda/envs/nnunet/bin/python|#!/home/txz/anaconda3/envs/nnunet/bin/python|' {} + ` 将所有shebang修改
+clone code, then `pip install -e ."
+
 
 ## 第二步，设置路径, i.e.
 `vim ./nnunetv2/paths.py`
