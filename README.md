@@ -1,2 +1,2 @@
-# GitHub-TXZ-CBCT-King-Queen
+# CBCT-King-Queen
 410 Cyber Segmentation Laboratory
