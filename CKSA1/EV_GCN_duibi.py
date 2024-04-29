@@ -1,0 +1,80 @@
+import torch
+from torch.nn import Linear as Lin, Sequential as Seq
+import torch_geometric as tg
+import torch.nn.functional as F
+from torch import nn
+from PAE import PAE
+from opt import *
+import math
+opt = OptInit().initialize()
+
+class EV_GCN(torch.nn.Module):
+    def __init__(self, input_dim, num_classes, dropout, edgenet_input_dim, edge_dropout, hgc, lg,lg1,gl=0.5):
+        super(EV_GCN, self).__init__()
+        K = 6
+        hidden = [hgc for i in range(lg)]
+        hidden1 = [hgc for i in range(lg1)]
+        self.dropout = dropout
+        self.edge_dropout = edge_dropout
+        bias = False
+        self.gl = gl
+        self.relu = torch.nn.ReLU(inplace=True)
+        self.lg1 = lg1
+        self.gconv_LR = nn.ModuleList()
+        for i in range(lg1):
+            in_channels = input_dim if i == 0 else hidden1[i - 1]
+            self.gconv_LR.append(tg.nn.ChebConv(int(in_channels), hidden[i], K, normalization='sym', bias=bias))
+        cls_input_dim = sum(hidden)
+        self.cls = nn.Sequential(
+            torch.nn.Linear(cls_input_dim, 256),
+            torch.nn.ReLU(inplace=True),
+            nn.BatchNorm1d(256),
+            torch.nn.Linear(256, num_classes)
+        )
+        self.edge_net = PAE(input_dim=edgenet_input_dim, dropout=dropout)
+        self.model_init()
+    def model_init(self):
+        for m in self.modules():
+            if isinstance(m, Lin):
+                torch.nn.init.kaiming_normal_(m.weight)
+                m.weight.requires_grad = True
+                if m.bias is not None:
+                    m.bias.data.zero_()
+                    m.bias.requires_grad = True
+    def forward(self, features_dis,features_hea, edge_index, edgenet_input, enforce_edropout=False):
+        edge_weight = torch.squeeze(self.edge_net(edgenet_input))
+        edge_weight_post = 1 - edge_weight
+        merged_tensor = torch.stack((edge_weight_post, edge_weight), dim=1)
+        threshold = self.gl
+        edge_weight01 = (edge_weight > threshold).long()
+        mask = torch.eq(edge_weight01, 1)
+        edge_index, edge_weight = edge_index[:, mask], edge_weight[mask]
+        if self.edge_dropout > 0:
+            if enforce_edropout or self.training:
+                one_mask_dis = torch.ones([edge_weight.shape[0], 1]).to(opt.device)
+                self.drop_mask_dis = F.dropout(one_mask_dis, self.edge_dropout, True)
+                self.bool_mask_dis = torch.squeeze(self.drop_mask_dis.type(torch.bool))
+                edge_index = edge_index[:, self.bool_mask_dis]
+                edge_weight = edge_weight[self.bool_mask_dis]
+        features_dis = F.dropout(features_dis, self.dropout, self.training)
+        h_dis = self.relu(self.gconv_LR[0](features_dis, edge_index, edge_weight))  #
+        h0_dis = h_dis
+        for i in range(1, self.lg1):
+            h_dis = F.dropout(h_dis, self.dropout, self.training)
+            h_dis = self.relu(self.gconv_LR[i](h_dis, edge_index, edge_weight))
+            jk = torch.cat((h0_dis, h_dis), dim=1)
+            h0_dis = jk
+        features_hea = F.dropout(features_hea, self.dropout, self.training)
+        h_hea = self.relu(self.gconv_LR[0](features_hea,edge_index, edge_weight))
+        h0_hea = h_hea
+        for i in range(1, self.lg1):
+            h_hea = F.dropout(h_hea, self.dropout, self.training)
+            h_hea = self.relu(self.gconv_LR[i](h_hea, edge_index, edge_weight))
+            jk = torch.cat((h0_hea,h_hea), dim=1)
+            h0_hea = jk
+        chayi = torch.abs(h0_dis - h0_hea)
+        logit = self.cls(chayi)
+        return logit,merged_tensor
+
+
+

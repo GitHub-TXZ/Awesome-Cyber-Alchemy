@@ -1,0 +1,34 @@
+imageType:
+  LoG:
+    sigma:
+    - 1.0
+    - 2.0
+    - 3.0
+    - 4.0
+    - 5.0
+  Original: {}
+  Wavelet: {}
+  LBP2D: {}
+  LBP3D: {}
+  Square: {}
+  SquareRoot: {}
+  Logarithm: {}
+  Gradient: {}
+  Exponential: {}
+featureClass:
+#  firstorder: null
+#  glcm: null
+#  gldm: null
+#  glrlm: null
+#  glszm: null
+#  ngtdm: null
+  shape: null
+setting:
+  binWidth: 25
+  label: 1
+  padDistance: 10
+  resampledPixelSpacing:
+  - 1
+  - 1
+  - 1
+  voxelArrayShift: 100

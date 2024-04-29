@@ -1,0 +1,21 @@
+imageType:
+  Original: {}
+  Wavelet: {}
+  Exponential: {}
+featureClass:
+
+  firstorder: null
+  glcm: null
+  gldm: null
+  glrlm: null
+  glszm: null
+  shape: null
+setting:
+  binWidth: 25
+  label: 1
+  padDistance: 10
+  resampledPixelSpacing:
+  - 1
+  - 1
+  - 1
+  voxelArrayShift: 100
