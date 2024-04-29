@@ -333,8 +333,8 @@ class RepViT2(nn.Module):
             layers.append(block(input_channel, exp_size, output_channel, k, s, use_se, use_hs))
             input_channel = output_channel
         self.features = nn.ModuleList(layers)
-        #self.classifier = Classfier(2*output_channel, num_classes, distillation)
-        self.classifier = Classfier(output_channel, num_classes, distillation)
+        self.classifier = Classfier(2*output_channel, num_classes, distillation)
+        #self.classifier = Classfier(output_channel, num_classes, distillation)
         # self.conv_last = Conv2d_BN(512, 512, 1, 1, 0)
         self.bdcm = BDCM(output_channel)
 
@@ -382,7 +382,7 @@ class RepViT2(nn.Module):
             if i in target_stages:
                 features.append(x)
 
-        #x = self.bdcm(x)
+        x = self.bdcm(x)
         # diff = torch.abs(x-torch.flip(x,dims=[3]))
         # diff = self.conv_last(diff)
         # x = torch.cat((x, diff), 1)
