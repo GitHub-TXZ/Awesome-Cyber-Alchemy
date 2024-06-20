@@ -5,10 +5,10 @@ import numpy as np
 
 # 常见的图像差异计算方法
 LossFunc = [
-    'L1',  # 测量两个图像之间的像素级绝对差异
-    'MSE',  # 用于衡量两个图像之间的像素级差异
-    'ED',  # 衡量两个图像之间的结构相似性，考虑了亮度、对比度和结构之间的差异
-    'Cosine',  # 多层特征的像素级差异
+    'L1',  
+    'MSE',  
+    'ED',  
+    'Cosine',  
 ]
 
 
@@ -21,11 +21,6 @@ class SymLoss(nn.Module):
     def __init__(self,mod='MSE',weight=None):
         """
         初始化自定义损失函数。
-
-        Args:
-            weight (Tensor, optional): 每个样本的权重，可用于加权损失计算。默认为None。
-            size_average (bool, optional): 如果为True，损失将在每个批次中按样本数量平均。默认为None。
-            reduce (bool, optional): 如果为True，损失将被降低。默认为None。
         """
         super(SymLoss, self).__init__()
 
